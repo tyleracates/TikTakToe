@@ -1,3 +1,282 @@
+/* User menu styles */
+.user-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    margin-top: 8px;
+    right: 0;
+    background: none;
+    color: #fff;
+    border-radius: 0;
+    flex-shrink: 0;
+    box-shadow: none;
+    min-width: 180px;
+    padding: 0;
+    font-size: 1em;
+    flex-direction: column;
+    gap: 8px;
+    overflow: visible;
+    z-index: 10003;
+}
+.user-menu.open {
+    display: block;
+}
+.profile-flex-center {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 120px;
+}
+.profile-x-icon {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 12px;
+    z-index: 1;
+}
+.profile-name-text {
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+    white-space: nowrap;
+}
+#status.text-white {
+    color: #fff !important;
+}
+#status.text-black {
+    color: #000 !important;
+}
+h1.text-white, #score-title.text-white, #scoreboard.text-white, #scoreboard.text-white .score-player {
+    color: #fff !important;
+}
+h1.text-black, #score-title.text-black, #scoreboard.text-black, #scoreboard.text-black .score-player {
+    color: #000 !important;
+}
+/* Alternating flash for white text on black background */
+.victory-white-text .status-flash-anim-a {
+    animation: status-flash-white-alt 1s steps(1, end) infinite !important;
+    color: #fff !important;
+}
+.victory-white-text .status-flash-anim-b {
+    animation: status-flash-graywhite-alt 1s steps(1, end) infinite !important;
+    color: #fff !important;
+}
+@keyframes status-flash-white-alt {
+    0%, 49.9% { color: #fff; visibility: visible; }
+    50%, 100% { color: #fff; visibility: hidden; }
+}
+@keyframes status-flash-graywhite-alt {
+    0%, 49.9% { color: #fff; visibility: hidden; }
+    50%, 100% { color: #fff; visibility: visible; }
+}
+/* Alternate flash for each span: one black visible, one gray visible */
+.victory-black-text .status-flash-anim-a {
+    animation: status-flash-black-alt 1s steps(1, end) infinite !important;
+    color: #000 !important;
+}
+.victory-black-text .status-flash-anim-b {
+    animation: status-flash-gray-alt 1s steps(1, end) infinite !important;
+    color: #000 !important;
+}
+@keyframes status-flash-black-alt {
+    0%, 49.9% { color: #000; visibility: visible; }
+    50%, 100% { color: #000; visibility: hidden; }
+}
+@keyframes status-flash-gray-alt {
+    0%, 49.9% { color: #000; visibility: hidden; }
+    50%, 100% { color: #000; visibility: visible; }
+}
+@keyframes status-flash-black {
+    0%, 49.9% { color: #000; visibility: visible; }
+    50%, 100% { color: #444; visibility: hidden; }
+}
+@keyframes status-flash-gray {
+    0%, 49.9% { color: #444; visibility: hidden; }
+    50%, 100% { color: #000; visibility: visible; }
+}
+#set-profile-name, #set-screen-color {
+    background: #000 !important;
+    color: #fff !important;
+}
+#set-profile-name:hover, #set-screen-color:hover {
+    background: #000 !important;
+    color: #fff !important;
+}
+#set-screen-color {
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.4s 0.12s, transform 0.4s 0.12s;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    border: 1.5px solid #fff;
+    border-radius: 6px;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+#set-screen-color:hover {
+    background: #333;
+}
+.user-menu.open #set-profile-name {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0.05s;
+}
+.user-menu.open #set-screen-color {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0.18s;
+}
+/* Restore border outlines for color options */
+.color-option {
+     width: 96%;
+     margin: 8px auto;
+     box-sizing: border-box;
+     padding: 10px 0;
+     font-size: 1em;
+     border: 2px solid #fff !important;
+     border-radius: 8px;
+     background: #000 !important;
+     color: #fff !important;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     text-align: center;
+     font-weight: bold;
+     cursor: pointer;
+     box-shadow: 0 2px 8px #0006;
+     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+     opacity: 1;
+     pointer-events: auto;
+     line-height: normal;
+     z-index: 10030;
+}
+.color-option:hover {
+    background: #333;
+    color: #fff !important;
+}
+.color-option[data-color="#e53935"] { color: #e53935 !important; }
+.color-option[data-color="#43a047"] { color: #43a047 !important; }
+.color-option[data-color="#1e88e5"] { color: #1e88e5 !important; }
+.color-option[data-color="#fbc02d"] { color: #fbc02d !important; }
+.color-option[data-color="#8e24aa"] { color: #8e24aa !important; }
+.color-option[data-color="#fb8c00"] { color: #fb8c00 !important; }
+.color-option[data-color="#ec407a"] { color: #ec407a !important; }
+.color-option[data-color="#888"] { color: #888 !important; }
+.color-option[data-color="#fff"] { color: #fff !important; }
+.color-option[data-color="#795548"] { color: #795548 !important; }
+ 
+.profile-name-display {
+ 
+    position: fixed;
+ 
+    top: 10px;
+ 
+    left: 10px;
+ 
+    margin: 0 !important;
+ 
+    font-size: 1.2em;
+ 
+    font-weight: bold;
+ 
+    color: #fff;
+ 
+    z-index: 10001;
+ 
+    background: #000;
+ 
+    padding: 10px 20px;
+ 
+    border-radius: 8px;
+ 
+    width: 200px;
+ 
+    box-shadow: 0 2px 8px #0002;
+ 
+    display: flex;
+ 
+    flex-direction: row;
+ 
+    align-items: center;
+ 
+    justify-content: flex-start;
+ 
+    gap: 18px;
+    border: 2px solid #fff;
+ 
+}
+.profile-name-display .profile-x-icon {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-right: 0;
+}
+.profile-name-display .profile-name-text {
+    text-align: center;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.profile-name-display.has-profile {
+    display: flex !important;
+}
+
+#user-menu-container {
+    position: fixed;
+    top: 16px;
+    right: 24px;
+    z-index: 10002;
+    overflow: visible !important;
+    margin: 0 !important;
+    left: auto !important;
+    }
+#user-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: #000;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px #0006;
+    padding: 0;
+    cursor: pointer;
+    position: static;
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    z-index: 10001;
+}
+.user-menu.open {
+    display: block;
+}
+#set-profile-name {
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.4s 0.12s, transform 0.4s 0.12s;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    border: 1.5px solid #fff;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+#set-profile-name:hover {
+    background: #333;
+}
 /* Alternating status message for O victory */
 .status-flash {
     font-weight: bold;
@@ -124,24 +403,37 @@ h1, #scoreboard-container, #score-title, #scoreboard, #scoreboard .score-player 
     gap: 30px;
     font-size: 1.1rem;
     margin-bottom: 10px;
+    font-weight: bold;
 }
 
 #scoreboard .score-player {
     display: flex;
     flex-direction: row;
     align-items: center;
+    font-weight: bold;
 }
 body {
     font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     background: #111;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    box-sizing: border-box;
+    text-align: center;
+    /* Remove flex centering to allow absolute/fixed elements to position as intended */
 }
+
+
 
 h1 {
     margin-top: 40px;
+}
+
+
+#game-board {
+    position: relative;
+    z-index: 10010;
 }
 
 .board {
@@ -149,7 +441,13 @@ h1 {
     grid-template-columns: repeat(3, 80px);
     grid-template-rows: repeat(3, 80px);
     gap: 10px;
-    margin: 30px 0;
+    margin: 30px auto;
+    width: 270px;
+    height: 270px;
+    min-width: 270px;
+    min-height: 270px;
+    background: none;
+    box-sizing: content-box;
 }
 
 .cell {
@@ -172,26 +470,155 @@ h1 {
 }
 
 #status {
-        color: #fff;
+    font-weight: bold;
     margin-bottom: 20px;
     font-size: 1.2rem;
     min-height: 1.5em;
 }
 
 #reset {
-        background: #111;
-        color: #fff;
-        border: 2px solid #fff;
-        border-radius: 6px;
-        transition: background 0.2s, color 0.2s;
-        color: #fff;
-        color: #fff;
-        color: #fff;
-    #reset:hover {
-        background: #fff;
-        color: #111;
-    }
+    background: #111;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
     padding: 8px 20px;
     font-size: 1rem;
     cursor: pointer;
+}
+#reset:hover {
+    background: #fff;
+    color: #111;
+}
+
+/* --- Restore color panel dropdown logic (force override) --- */
+/* --- End restore color panel dropdown logic --- */
+
+/* --- Animated cascading menu options --- */
+#set-profile-name {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    animation: menu-cascade 0.35s cubic-bezier(.4,1.6,.6,1) backwards;
+    animation-delay: 0.05s;
+}
+#set-screen-color {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    animation: menu-cascade 0.35s cubic-bezier(.4,1.6,.6,1) backwards;
+    animation-delay: 0.18s;
+}
+@keyframes menu-cascade {
+    0% {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.user-menu.open #set-profile-name {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0.05s;
+}
+.user-menu.open #set-screen-color {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0.18s;
+}
+/* --- End animated cascading menu options --- */
+
+/* --- Restore color panel dropdown logic (force override) --- */
+/* --- End position color panel under last menu option --- */
+/* --- End restore color panel dropdown logic --- */
+
+/* --- Make color panel options display vertically and centered under the menu --- */
+.color-panel {
+    display: none;
+    /* position: absolute; */
+    /* right: 0; */
+    /* top: 100%; */
+    margin-top: 20px;
+    min-width: 180px;
+    width: 100%;
+    flex-direction: column;
+    /* align-items: stretch; */
+    justify-content: flex-start;
+    margin: 0;
+     border: none;
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    overflow-y: visible;
+    z-index: 10020;
+}
+.color-panel.open {
+    display: flex;
+    flex-direction: column;
+    /* align-items: stretch; */
+    /* gap: 2px; */
+}
+
+/* Animation for color options, only when open */
+.color-panel.open .color-option {
+    animation: menu-cascade 0.35s cubic-bezier(.4,1.6,.6,1) backwards;
+}
+.color-panel.open .color-option {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.color-panel.open .color-option:nth-child(1) { animation-delay: 0.05s; }
+.color-panel.open .color-option:nth-child(2) { animation-delay: 0.10s; }
+.color-panel.open .color-option:nth-child(3) { animation-delay: 0.15s; }
+.color-panel.open .color-option:nth-child(4) { animation-delay: 0.20s; }
+.color-panel.open .color-option:nth-child(5) { animation-delay: 0.25s; }
+.color-panel.open .color-option:nth-child(6) { animation-delay: 0.30s; }
+.color-panel.open .color-option:nth-child(7) { animation-delay: 0.35s; }
+.color-panel.open .color-option:nth-child(8) { animation-delay: 0.40s; }
+.color-panel.open .color-option:nth-child(9) { animation-delay: 0.45s; }
+.color-panel.open .color-option:nth-child(10) { animation-delay: 0.50s; }
+.color-panel.open .color-option:nth-child(11) { animation-delay: 0.55s; }
+ 
+/* --- End vertical, centered color panel --- */
+
+/* --- Style color-option buttons to match main menu buttons --- */
+.color-option {
+    width: 96%;
+    margin: 1px auto !important;
+    box-sizing: border-box;
+    padding: 10px 0;
+    font-size: 1em;
+    border: 1.5px solid #fff;
+    border-radius: 8px;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #0006;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    opacity: 1;
+    pointer-events: auto;
+    line-height: normal;
+}
+.color-option:hover {
+    background: #222;
+    color: #fff;
+    box-shadow: 0 4px 16px #000a;
+}
+.color-option:last-child {
+    margin-bottom: 24px !important;
+    padding-bottom: 12px !important;
+}
+/* --- End fix color option cutoff and restore colored text --- */
 }
