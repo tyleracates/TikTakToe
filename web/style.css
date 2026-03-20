@@ -17,9 +17,47 @@
     gap: 8px;
     overflow: visible;
     z-index: 10003;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+.user-menu #set-profile-name,
+.user-menu #set-screen-color {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: background 0.2s, opacity 0.7s 0.18s, transform 0.7s 0.18s;
+}
+.user-menu #highscore-menu {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: background 0.2s, opacity 0.7s, transform 0.7s;
+}
+}
+.user-menu.open #set-profile-name {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+        transition-delay: 0.18s;
+}
+.user-menu.open #set-screen-color {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+        transition-delay: 0.45s;
+}
+.user-menu.open #highscore-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0.72s;
 }
 .user-menu.open {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 .profile-flex-center {
     position: relative;
@@ -621,4 +659,3 @@ h1 {
     padding-bottom: 12px !important;
 }
 /* --- End fix color option cutoff and restore colored text --- */
-}

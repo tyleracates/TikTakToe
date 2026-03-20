@@ -36,6 +36,48 @@ document.addEventListener('DOMContentLoaded', function() {
         const colorPanel = document.getElementById('color-panel');
         const colorOptions = colorPanel ? colorPanel.querySelectorAll('.color-option') : [];
 
+            const highscoreMenuBtn = document.getElementById('highscore-menu');
+            highscoreMenuBtn && highscoreMenuBtn.addEventListener('click', () => {
+                    // Get highest scores and profile name
+                    const highscoreX = parseInt(localStorage.getItem('highscoreX') || '0', 10);
+                    const highscoreO = parseInt(localStorage.getItem('highscoreO') || '0', 10);
+                    const profileName = localStorage.getItem('profileName') || 'Player X';
+
+                    // Create popup
+                    const popup = document.createElement('div');
+                    popup.style.position = 'fixed';
+                    popup.style.top = '50%';
+                    popup.style.left = '50%';
+                    popup.style.transform = 'translate(-50%, -50%)';
+                    popup.style.background = '#111';
+                    popup.style.color = '#fff';
+                    popup.style.border = '2px solid #fff';
+                    popup.style.borderRadius = '10px';
+                    popup.style.boxShadow = '0 4px 24px #000a';
+                    popup.style.padding = '28px 36px';
+                    popup.style.zIndex = '10050';
+                    popup.style.fontSize = '1.2em';
+                    popup.style.textAlign = 'center';
+                    popup.innerHTML = `
+                        <div style="font-weight:bold;font-size:1.3em;margin-bottom:16px;">Highscores</div>
+                        <div style="display:flex;justify-content:center;gap:32px;margin-bottom:18px;">
+                            <div style="min-width:120px;">
+                                <span style="font-weight:bold;">${profileName}</span><br>
+                                <span style="font-size:1.5em;">${highscoreX}</span>
+                            </div>
+                            <div style="min-width:120px;">
+                                <span style="font-weight:bold;">Player O</span><br>
+                                <span style="font-size:1.5em;">${highscoreO}</span>
+                            </div>
+                        </div>
+                        <button id="close-highscore-popup" style="margin-top:8px;padding:8px 24px;background:#222;color:#fff;border:1.5px solid #fff;border-radius:6px;font-size:1em;cursor:pointer;">Close</button>
+                    `;
+                    document.body.appendChild(popup);
+                    document.getElementById('close-highscore-popup').addEventListener('click', () => {
+                        popup.remove();
+                    });
+            });
+
         setProfileNameBtn.addEventListener('click', openProfileNamePrompt);
 
         userMenuBtn.addEventListener('click', (e) => {
@@ -122,12 +164,17 @@ document.addEventListener('DOMContentLoaded', function() {
         let gameActive = true;
 
         function renderScoreboard() {
-            const name = localStorage.getItem('profileName') || 'Player X';
-            scoreboardElement.innerHTML = `
-                <span class="score-player">${name} - <span style="margin-left:6px;">${scores.X}</span></span>
-                <span class="score-player">Player O - <span style="margin-left:6px;">${scores.O}</span></span>
-                <span class="score-player">Draws - <span style="margin-left:6px;">${scores.Draws}</span></span>
-            `;
+                const name = localStorage.getItem('profileName') || 'Player X';
+                scoreboardElement.innerHTML = `
+                    <span class="score-player">${name} - <span style="margin-left:6px;">${scores.X}</span></span>
+                    <span class="score-player">Player O - <span style="margin-left:6px;">${scores.O}</span></span>
+                    <span class="score-player">Draws - <span style="margin-left:6px;">${scores.Draws}</span></span>
+                `;
+                // Update highscores in localStorage
+                const prevHighscoreX = parseInt(localStorage.getItem('highscoreX') || '0', 10);
+                const prevHighscoreO = parseInt(localStorage.getItem('highscoreO') || '0', 10);
+                if (scores.X > prevHighscoreX) localStorage.setItem('highscoreX', scores.X);
+                if (scores.O > prevHighscoreO) localStorage.setItem('highscoreO', scores.O);
         }
 
         function renderBoard() {
