@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main
+      - name: Checkout default branch
         uses: actions/checkout@v4
         with:
-          ref: master
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -72,4 +72,4 @@ jobs:
           SHA=$(git rev-parse HEAD)
           git checkout -b "${BRANCH}"
           git push origin "${BRANCH}"
-          echo "✅ Candidate branch '${BRANCH}' created from main@${SHA}"
+          echo "✅ Candidate branch '${BRANCH}' created from ${GITHUB_REF_NAME}@${SHA}"

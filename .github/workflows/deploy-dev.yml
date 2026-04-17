@@ -36,6 +36,20 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Preflight config check (dev)
+        env:
+          DEV_URL: ${{ vars.DEV_URL }}
+          DEV_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+        run: |
+          if [[ -z "$DEV_URL" ]]; then
+            echo "::error::Missing environment variable DEV_URL in GitHub Environment 'dev'."
+            exit 1
+          fi
+          if [[ -z "$DEV_TOKEN" ]]; then
+            echo "::error::Missing secret AZURE_STATIC_WEB_APPS_API_TOKEN_DEV in GitHub Environment 'dev'."
+            exit 1
+          fi
+
       - name: Deploy to Azure Static Web Apps (dev)
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -48,6 +62,4 @@ jobs:
         run: |
           echo "Waiting for deployment to settle..."
           sleep 10
-          # Replace with actual dev SWA URL once configured
-          # curl --fail --silent --show-error ${{ vars.DEV_URL }}
-          echo "Smoke test placeholder - configure DEV_URL variable to enable"
+          curl --fail --silent --show-error "${{ vars.DEV_URL }}"
