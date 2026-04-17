@@ -1,0 +1,93 @@
+name: Select Release Candidate
+
+on:
+  schedule:
+    - cron: "0 10 * * 4"  # Thursday 10:00 UTC
+  workflow_dispatch:
+    inputs:
+      candidate_branch:
+        description: "Specific candidate branch to promote (e.g. release/2026.W17.3). Leave blank to auto-select latest."
+        required: false
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC
+
+jobs:
+  select-rc:
+    name: Select RC & Deploy to Preprod
+    runs-on: ubuntu-latest
+    environment: preprod  # Requires human approval (configure in GitHub Settings)
+
+    steps:
+      - name: Resolve candidate branch
+        id: resolve
+        run: |
+          if [[ -n "${{ inputs.candidate_branch }}" ]]; then
+            BRANCH="${{ inputs.candidate_branch }}"
+            echo "Using manually specified branch: ${BRANCH}"
+          else
+            # Auto-select: find latest candidate for current week (Wed > Tue > Mon)
+            YEAR=$(date -u +%Y)
+            WEEK=$(date -u +%V)
+            BRANCH=""
+            for DOW in 3 2 1; do
+              CANDIDATE="release/${YEAR}.W${WEEK}.${DOW}"
+              if git ls-remote --exit-code --heads origin "${CANDIDATE}" > /dev/null 2>&1; then
+                BRANCH="${CANDIDATE}"
+                echo "Auto-selected candidate: ${BRANCH}"
+                break
+              fi
+            done
+            if [[ -z "${BRANCH}" ]]; then
+              echo "❌ No candidate branches found for week ${YEAR}.W${WEEK}. Exiting."
+              exit 1
+            fi
+          fi
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.resolve.outputs.branch }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI checks against candidate
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          npm run build
+
+      - name: Deploy to Azure Static Web Apps (preprod)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD }}
+          action: upload
+          app_location: /
+          output_location: dist
+
+      - name: Smoke test (preprod)
+        run: |
+          echo "Waiting for deployment to settle..."
+          sleep 10
+          # Replace with actual preprod SWA URL once configured
+          # curl --fail --silent --show-error ${{ vars.PREPROD_URL }}
+          echo "Smoke test placeholder - configure PREPROD_URL variable to enable"
+
+      - name: Tag RC
+        run: |
+          BRANCH="${{ steps.resolve.outputs.branch }}"
+          SHA=$(git rev-parse HEAD)
+          TAG="rc-${BRANCH#release/}-${SHA:0:7}"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          echo "✅ RC deployed from '${BRANCH}' — tagged as '${TAG}'"

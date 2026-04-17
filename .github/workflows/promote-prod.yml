@@ -1,0 +1,73 @@
+name: Promote to Production
+
+on:
+  schedule:
+    - cron: "0 10 * * 4"  # Thursday 10:00 UTC (1 week after RC selection)
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Release branch currently deployed to preprod (e.g. release/2026.W17.3)"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC
+
+jobs:
+  promote-prod:
+    name: Promote Preprod to Production
+    runs-on: ubuntu-latest
+    environment: prod  # Requires human approval (configure in GitHub Settings)
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_branch }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify build is clean
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          npm run build
+
+      - name: Check preprod health before promoting
+        run: |
+          # Replace with actual preprod SWA URL once configured
+          # curl --fail --silent --show-error ${{ vars.PREPROD_URL }}
+          echo "Health check placeholder - configure PREPROD_URL variable to enable"
+
+      - name: Deploy to Azure Static Web Apps (prod)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
+          action: upload
+          app_location: /
+          output_location: dist
+
+      - name: Smoke test (prod)
+        run: |
+          echo "Waiting for deployment to settle..."
+          sleep 10
+          # Replace with actual prod SWA URL once configured
+          # curl --fail --silent --show-error ${{ vars.PROD_URL }}
+          echo "Smoke test placeholder - configure PROD_URL variable to enable"
+
+      - name: Tag production release
+        run: |
+          BRANCH="${{ inputs.release_branch }}"
+          SHA=$(git rev-parse HEAD)
+          TAG="prod-${BRANCH#release/}-${SHA:0:7}"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          echo "✅ Production release from '${BRANCH}' — tagged as '${TAG}'"

@@ -1,0 +1,75 @@
+name: Cut Release Candidate
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Monday    06:00 UTC
+    - cron: "0 6 * * 2"  # Tuesday   06:00 UTC
+    - cron: "0 6 * * 3"  # Wednesday 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write  # Required to create branches
+
+jobs:
+  cut-candidate:
+    name: Cut Release Candidate Branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI checks
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          npm run build
+
+      - name: Check dev environment health
+        run: |
+          # Replace with actual dev SWA URL once configured
+          # curl --fail --silent --show-error ${{ vars.DEV_URL }}
+          echo "Health check placeholder - configure DEV_URL variable to enable"
+
+      - name: Compute branch name
+        id: branch
+        run: |
+          # Determine ISO week number and day-of-week (1=Mon, 2=Tue, 3=Wed)
+          YEAR=$(date -u +%Y)
+          WEEK=$(date -u +%V)
+          DOW=$(date -u +%u)
+          BRANCH="release/${YEAR}.W${WEEK}.${DOW}"
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "Candidate branch: ${BRANCH}"
+
+      - name: Check if candidate already exists
+        id: check
+        run: |
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          if git ls-remote --exit-code --heads origin "${BRANCH}"; then
+            echo "Branch ${BRANCH} already exists — skipping."
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create candidate branch
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          BRANCH="${{ steps.branch.outputs.branch }}"
+          SHA=$(git rev-parse HEAD)
+          git checkout -b "${BRANCH}"
+          git push origin "${BRANCH}"
+          echo "✅ Candidate branch '${BRANCH}' created from main@${SHA}"

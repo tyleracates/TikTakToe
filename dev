@@ -1,0 +1,155 @@
+# TikTakToe Deployment Plan
+# Adapted from RELEASE_TRAIN_EPIC.md
+# Date: 2026-04-16
+
+================================================================================
+WILL BE USED
+================================================================================
+
+BRANCHING & RELEASE CADENCE
+  - Branch naming convention: release/YYYY.WNN.D (e.g. release/2026.W17.3)
+  - Weekly release train cadence:
+      Mon/Tue/Wed 06:00 UTC  ->  cut candidate branch if dev is healthy
+      Thu 10:00 UTC          ->  select RC, deploy to preprod (with approval)
+      Thu +1 week            ->  promote preprod to prod (with approval)
+  - Unused candidate branches kept forever for traceability
+
+GITHUB ACTIONS WORKFLOWS
+  - ci.yml              PR -> main: lint, type check, build, npm audit
+  - deploy-dev.yml      Push -> main: build & deploy to SWA dev environment
+  - cut-candidate.yml   Cron Mon/Tue/Wed: create release branch if dev healthy
+  - select-rc.yml       Cron Thu: pick latest candidate, deploy to preprod
+  - promote-prod.yml    Cron/manual: promote preprod to prod
+  - hotfix.yml          Manual: cherry-pick fix, deploy to preprod or prod
+
+CI STEPS (ci.yml)
+  - ESLint (eslint .)
+  - TypeScript type check (tsc --noEmit)
+  - Production build validation (npm run build)
+  - Security scan (npm audit)
+
+GITHUB ENVIRONMENTS
+  - dev       (no approval required, auto-deploy on merge to main)
+  - preprod   (required reviewers: repo owners)
+  - prod      (required reviewers + wait timer after preprod)
+
+BRANCH PROTECTION (main)
+  - Require pull request before merging
+  - Require CI status checks to pass (ci.yml)
+  - Require 1 reviewer approval
+  - No force push, no direct deletions
+
+BRANCH PROTECTION (release/**)
+  - No force push (except via hotfix pipeline)
+  - No deletions
+
+OIDC WORKLOAD IDENTITY FEDERATION
+  - Replace stored AZURE_STATIC_WEB_APPS_API_TOKEN secret with short-lived
+    OIDC tokens scoped per environment (dev/preprod/prod)
+  - No long-lived secrets stored in GitHub
+
+ROLLBACK STRATEGY
+  - Azure SWA retains prior deployments
+  - Rollback = redeploy previous build via SWA CLI or portal
+
+HOTFIX FLOW
+  - Fix committed to main first (validates in dev)
+  - Cherry-picked to target release branch
+  - Pipeline builds and deploys to preprod or prod with approval gate
+
+================================================================================
+WILL NOT BE USED
+================================================================================
+
+INFRASTRUCTURE AS CODE (BICEP)
+  - Not needed. Azure SWA is provisioned as a single managed resource.
+  - No VNets, no subnets, no private endpoints to configure.
+  - Modules dropped: container-registry, key-vault, storage-account,
+    monitoring, container-environment, container-app, rbac, resource-group
+
+DOCKER / CONTAINER REGISTRY (ACR)
+  - Not applicable. SWA deploys static build output (dist/) directly.
+  - No Dockerfile, no image tagging, no ACR push step.
+
+AZURE CONTAINER APPS
+  - Not applicable. No backend services, no containerized workloads.
+
+MULTI-SERVICE ARCHITECTURE
+  - TikTakToe is a pure SPA. No webapp, doc-index-mcp, permit-mcp services.
+
+PROVISION PARTITION WORKFLOW (provision-partition.yml)
+  - SWA environments (dev/preprod/prod) handle partition isolation natively.
+  - No need to create separate resource groups or managed identities per env.
+
+PYTHON-SPECIFIC CI STEPS
+  - ruff lint/format check    (Python only)
+  - pyright type check        (Python only)
+  - pip-audit security scan   (Python only)
+  - Tier 2 integration tests  (requires running MCP servers)
+
+TELEMETRY GATE (App Insights availability > 99.9%)
+  - Optional/deferred. App Insights not currently configured for TikTakToe.
+  - Can be added later if observability requirements grow.
+
+SEPARATE BE / FE REPOS
+  - Single repo. One pipeline set covers everything.
+
+CADDY REVERSE PROXY / LOCAL DEV SETUP
+  - Not needed. Vite dev server (npm run dev) handles local development.
+  - No microservices to proxy.
+
+POWERSHELL PROVISIONING SCRIPTS
+  - No legacy PowerShell scripts exist in this repo. Nothing to retire.
+
+AZURE AD APP REGISTRATIONS / ENTRA EXTERNAL ID
+  - No user authentication in TikTakToe. Not applicable.
+
+DEPENDABOT (pip)
+  - Python dependency scanning not applicable.
+  - npm Dependabot can be enabled (optional, low priority).
+
+================================================================================
+PHASED IMPLEMENTATION ORDER
+================================================================================
+
+Phase 0 — Foundation
+  [x] Fix package.json: rename "name" from "y" to "tiktaktoe"
+  [x] Add "test" script to package.json (required for CI)
+  [ ] MANUAL: Set up GitHub Environments (Settings -> Environments)
+        - dev     : no approval required
+        - preprod : required reviewers (repo owners)
+        - prod    : required reviewers + wait timer (5 days after preprod)
+  [ ] MANUAL: Add secrets per environment
+        - AZURE_STATIC_WEB_APPS_API_TOKEN_DEV
+        - AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD
+        - AZURE_STATIC_WEB_APPS_API_TOKEN_PROD
+  [ ] MANUAL: Add environment variables per environment
+        - DEV_URL, PREPROD_URL, PROD_URL (SWA hostnames for smoke tests)
+  [ ] MANUAL: Configure branch protection on main
+        - Require PR before merging
+        - Require CI (ci.yml) to pass
+        - Require 1 reviewer
+        - No force push, no direct delete
+  [ ] MANUAL: Configure branch protection on release/**
+        - No force push
+        - No deletions
+  [ ] DEFERRED: Replace API token auth with OIDC workload identity federation
+        (workflows have id-token: write permission ready; Azure AD app
+         registration with federated credentials needed to complete this)
+
+Phase 1 — CI Pipeline
+  [x] Create .github/workflows/ci.yml
+
+Phase 2 — Dev Deployment
+  [x] Create .github/workflows/deploy-dev.yml
+        (triggers on push to main/master; replaces scheduled deploy)
+  [ ] MANUAL: Delete or disable old azure-swa-scheduled-deploy.yml once
+        deploy-dev.yml is confirmed working
+
+Phase 3 — Release Train
+  [x] Create .github/workflows/cut-candidate.yml
+  [x] Create .github/workflows/select-rc.yml
+  [x] Create .github/workflows/promote-prod.yml
+
+Phase 4 — Hotfix
+  [x] Create .github/workflows/hotfix.yml

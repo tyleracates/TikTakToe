@@ -1,0 +1,108 @@
+name: Hotfix
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "Release branch to patch (e.g. release/2026.W17.3)"
+        required: true
+      commit_sha:
+        description: "Commit SHA from main to cherry-pick (the fix)"
+        required: true
+      target_partition:
+        description: "Partition to deploy to after patching"
+        required: true
+        type: choice
+        options:
+          - preprod
+          - prod
+
+permissions:
+  contents: write
+  id-token: write  # Required for OIDC
+
+jobs:
+  hotfix:
+    name: Cherry-pick & Deploy Hotfix
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target_partition }}  # Requires human approval
+
+    steps:
+      - name: Validate inputs
+        run: |
+          BRANCH="${{ inputs.target_branch }}"
+          SHA="${{ inputs.commit_sha }}"
+          echo "Target branch : ${BRANCH}"
+          echo "Cherry-pick   : ${SHA}"
+          echo "Target env    : ${{ inputs.target_partition }}"
+
+      - name: Checkout target release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch fix commit from main
+        run: git fetch origin master
+
+      - name: Cherry-pick fix
+        run: |
+          git cherry-pick ${{ inputs.commit_sha }} || {
+            echo "❌ Cherry-pick failed. Resolve conflicts manually."
+            exit 1
+          }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI checks on patched branch
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          npm run build
+
+      - name: Deploy to Azure Static Web Apps (preprod)
+        if: inputs.target_partition == 'preprod'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD }}
+          action: upload
+          app_location: /
+          output_location: dist
+
+      - name: Deploy to Azure Static Web Apps (prod)
+        if: inputs.target_partition == 'prod'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
+          action: upload
+          app_location: /
+          output_location: dist
+
+      - name: Smoke test
+        run: |
+          echo "Waiting for deployment to settle..."
+          sleep 10
+          # URL var is resolved dynamically based on target_partition
+          # curl --fail --silent --show-error ${{ vars[format('{0}_URL', upper(inputs.target_partition))] }}
+          echo "Smoke test placeholder - configure PREPROD_URL / PROD_URL variables to enable"
+
+      - name: Push cherry-pick commit to release branch
+        run: |
+          git push origin HEAD:${{ inputs.target_branch }}
+          SHA=$(git rev-parse HEAD)
+          TAG="hotfix-${SHA:0:7}"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          echo "✅ Hotfix deployed and committed to '${{ inputs.target_branch }}' — tagged '${TAG}'"
