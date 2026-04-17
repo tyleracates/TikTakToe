@@ -16,8 +16,6 @@ const MainMenu: React.FC<MainMenuProps> = ({
   setProfileName,
   screenColor,
   setScreenColor,
-  difficulty: _difficulty,
-  setDifficulty: _setDifficulty,
 }) => {
   const profileHelpText = 'Spell the name of the loser here!';
   const [expanded, setExpanded] = useState(false);
@@ -58,6 +56,7 @@ const MainMenu: React.FC<MainMenuProps> = ({
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentionally reset word index when the message is re-shown
     setActiveDifficultyWord(0);
     const intervalId = window.setInterval(() => {
       setActiveDifficultyWord(prev => (prev + 1) % difficultyWords.length);

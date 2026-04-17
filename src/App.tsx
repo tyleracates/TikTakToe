@@ -11,6 +11,13 @@ const WIN_LINES = [
   [0, 4, 8], [2, 4, 6]
 ];
 
+// Generated once at module load — stable across re-renders
+const emojiConfigs = Array.from({ length: 40 }, () => ({
+  left: `${(Math.random() * 96).toFixed(1)}%`,
+  duration: `${(7 + Math.random() * 8).toFixed(1)}s`,
+  delay: `${(Math.random() * 7).toFixed(1)}s`,
+}));
+
 function App() {
   // State
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || '');
@@ -27,13 +34,7 @@ function App() {
   const [showTauntPopup, setShowTauntPopup] = useState(false);
   const [winningLine, setWinningLine] = useState<number[]>([]);
   const [showLaughingEmojis, setShowLaughingEmojis] = useState(false);
-  const emojiConfigs = useRef(
-    Array.from({ length: 40 }, () => ({
-      left: `${(Math.random() * 96).toFixed(1)}%`,
-      duration: `${(7 + Math.random() * 8).toFixed(1)}s`,
-      delay: `${(Math.random() * 7).toFixed(1)}s`,
-    }))
-  ).current;
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [highscores, setHighscores] = useState<{ name: string; score: number }[]>(() => {
     const scores = localStorage.getItem('highscores');
