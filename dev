@@ -143,7 +143,7 @@ Phase 1 — CI Pipeline
 Phase 2 — Dev Deployment
   [x] Create .github/workflows/deploy-dev.yml
         (triggers on push to main/master; replaces scheduled deploy)
-  [ ] MANUAL: Delete or disable old azure-swa-scheduled-deploy.yml once
+  [x] Delete old azure-swa-scheduled-deploy.yml
         deploy-dev.yml is confirmed working
 
 Phase 3 — Release Train
