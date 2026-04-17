@@ -3,7 +3,6 @@ import MainMenu from './components/MainMenu';
 import GameBoard from './components/GameBoard';
 import HighscorePopup from './components/HighscorePopup';
 import VictoryEffect from './components/VictoryEffect';
-import ProfileName from './components/ProfileName';
 import './App.css';
 
 const WIN_LINES = [
@@ -40,7 +39,7 @@ function App() {
     const scores = localStorage.getItem('highscores');
     return scores ? JSON.parse(scores) : [];
   });
-  const [playerWins, setPlayerWins] = useState<number>(() => {
+  const [playerWins] = useState<number>(() => {
     return parseInt(localStorage.getItem('playerWins') || '0', 10);
   });
 
