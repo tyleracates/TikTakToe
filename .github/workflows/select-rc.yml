@@ -10,7 +10,7 @@ on:
         required: false
 
 permissions:
-  contents: read
+  contents: write  # Required for git tag push
   id-token: write  # Required for OIDC
 
 jobs:
