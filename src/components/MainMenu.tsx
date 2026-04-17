@@ -16,8 +16,8 @@ const MainMenu: React.FC<MainMenuProps> = ({
   setProfileName,
   screenColor,
   setScreenColor,
-  difficulty,
-  setDifficulty,
+  difficulty: _difficulty,
+  setDifficulty: _setDifficulty,
 }) => {
   const profileHelpText = 'Spell the name of the loser here!';
   const [expanded, setExpanded] = useState(false);
