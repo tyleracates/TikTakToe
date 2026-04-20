@@ -83,6 +83,5 @@ jobs:
           BRANCH="${{ inputs.release_branch }}"
           SHA=$(git rev-parse HEAD)
           TAG="prod-${BRANCH#release/}-${SHA:0:7}"
-          git tag "${TAG}"
-          git push origin "${TAG}"
+          git push origin "HEAD:refs/tags/${TAG}"
           echo "✅ Production release from '${BRANCH}' — tagged as '${TAG}'"
