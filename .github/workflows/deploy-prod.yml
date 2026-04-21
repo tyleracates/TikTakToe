@@ -1,0 +1,57 @@
+name: Deploy to Prod
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Run audit
+        run: npm audit --audit-level=moderate
+  
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: ${{ vars.PROD_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Deploy to Prod
+        env:
+          PROD_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
+        run: npx --yes @azure/static-web-apps-cli deploy ./dist --deployment-token "$PROD_TOKEN" --env production
