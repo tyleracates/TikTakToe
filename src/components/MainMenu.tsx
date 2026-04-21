@@ -190,6 +190,9 @@ const MainMenu: React.FC<MainMenuProps> = ({
         </div>
       )}
       </div>
+      <footer style={{ position: 'fixed', bottom: '12px', left: '16px', fontSize: '0.75rem', color: '#888', pointerEvents: 'none' }}>
+        Created by Tyler
+      </footer>
     </>
   );
 };
