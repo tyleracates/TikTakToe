@@ -1,0 +1,60 @@
+name: Deploy to Preprod
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC workload identity federation
+
+concurrency:
+  group: deploy-preprod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Deploy to Preprod
+    runs-on: ubuntu-latest
+    environment: preprod
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Preflight config check (preprod)
+        env:
+          PREPROD_URL: ${{ vars.PREPROD_URL }}
+          PREPROD_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD }}
+        run: |
+          if [[ -z "$PREPROD_URL" ]]; then
+            echo "::error::Missing environment variable PREPROD_URL in GitHub Environment 'preprod'."
+            exit 1
+          fi
+          if [[ -z "$PREPROD_TOKEN" ]]; then
+            echo "::error::Missing secret AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD in GitHub Environment 'preprod'."
+            exit 1
+          fi
+
+      - name: Deploy to Azure Static Web Apps (preprod) via SWA CLI
+        env:
+          PREPROD_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PREPROD }}
+        run: |
+          npx --yes @azure/static-web-apps-cli deploy ./dist --deployment-token "$PREPROD_TOKEN" --env production
+
+      - name: Smoke test (preprod)
+        run: |
+          echo "Waiting for deployment to settle..."
+          sleep 10
+          curl --fail --silent --show-error "${{ vars.PREPROD_URL }}"
