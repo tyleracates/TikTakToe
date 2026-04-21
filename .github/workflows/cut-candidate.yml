@@ -14,6 +14,7 @@ jobs:
   cut-candidate:
     name: Cut Release Candidate Branch
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
       - name: Checkout default branch
@@ -38,10 +39,14 @@ jobs:
           npm run build
 
       - name: Check dev environment health
+        env:
+          DEV_URL: ${{ vars.DEV_URL }}
         run: |
-          # Replace with actual dev SWA URL once configured
-          # curl --fail --silent --show-error ${{ vars.DEV_URL }}
-          echo "Health check placeholder - configure DEV_URL variable to enable"
+          if [[ -z "$DEV_URL" ]]; then
+            echo "::error::Missing environment variable DEV_URL in GitHub Environment 'dev'."
+            exit 1
+          fi
+          curl --fail --silent --show-error "$DEV_URL"
 
       - name: Compute branch name
         id: branch

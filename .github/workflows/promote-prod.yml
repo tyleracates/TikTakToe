@@ -7,7 +7,7 @@ on:
     inputs:
       release_branch:
         description: "Release branch currently deployed to preprod (e.g. release/2026.W17.3)"
-        required: true
+        required: false
 
 permissions:
   contents: write  # Required for git tag push
@@ -20,10 +20,35 @@ jobs:
     environment: prod  # Requires human approval (configure in GitHub Settings)
 
     steps:
+      - name: Resolve release branch
+        id: resolve
+        run: |
+          if [[ -n "${{ inputs.release_branch }}" ]]; then
+            BRANCH="${{ inputs.release_branch }}"
+            echo "Using manually specified release branch: ${BRANCH}"
+          else
+            YEAR=$(date -u -d '7 days ago' +%Y)
+            WEEK=$(date -u -d '7 days ago' +%V)
+            BRANCH=""
+            for DOW in 3 2 1; do
+              CANDIDATE="release/${YEAR}.W${WEEK}.${DOW}"
+              if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" "${CANDIDATE}" > /dev/null 2>&1; then
+                BRANCH="${CANDIDATE}"
+                echo "Auto-selected prior-week release branch: ${BRANCH}"
+                break
+              fi
+            done
+            if [[ -z "${BRANCH}" ]]; then
+              echo "::error::No prior-week release branches found for ${YEAR}.W${WEEK}."
+              exit 1
+            fi
+          fi
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+
       - name: Checkout release branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_branch }}
+          ref: ${{ steps.resolve.outputs.branch }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -43,14 +68,9 @@ jobs:
 
       - name: Preflight config check (prod)
         env:
-          PREPROD_URL: ${{ vars.PREPROD_URL }}
           PROD_URL: ${{ vars.PROD_URL }}
           PROD_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
         run: |
-          if [[ -z "$PREPROD_URL" ]]; then
-            echo "::error::Missing environment variable PREPROD_URL in GitHub Environment 'prod'."
-            exit 1
-          fi
           if [[ -z "$PROD_URL" ]]; then
             echo "::error::Missing environment variable PROD_URL in GitHub Environment 'prod'."
             exit 1
@@ -60,17 +80,11 @@ jobs:
             exit 1
           fi
 
-      - name: Check preprod health before promoting
+      - name: Deploy to Azure Static Web Apps (prod) via SWA CLI
+        env:
+          PROD_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
         run: |
-          curl --fail --silent --show-error "${{ vars.PREPROD_URL }}"
-
-      - name: Deploy to Azure Static Web Apps (prod)
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
-          action: upload
-          app_location: /
-          output_location: dist
+          npx --yes @azure/static-web-apps-cli deploy ./dist --deployment-token "$PROD_TOKEN" --env production
 
       - name: Smoke test (prod)
         run: |
@@ -80,7 +94,7 @@ jobs:
 
       - name: Tag production release
         run: |
-          BRANCH="${{ inputs.release_branch }}"
+          BRANCH="${{ steps.resolve.outputs.branch }}"
           SHA=$(git rev-parse HEAD)
           TAG="prod-${BRANCH#release/}-${SHA:0:7}"
           git push origin "HEAD:refs/tags/${TAG}"
