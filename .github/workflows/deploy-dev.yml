@@ -51,13 +51,11 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy to Azure Static Web Apps (dev)
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
-          action: upload
-          app_location: /
-          output_location: dist
+      - name: Deploy to Azure Static Web Apps (dev) via SWA CLI
+        env:
+          DEV_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+        run: |
+          npx --yes @azure/static-web-apps-cli deploy ./dist --deployment-token "$DEV_TOKEN"
 
       - name: Smoke test (dev)
         run: |
